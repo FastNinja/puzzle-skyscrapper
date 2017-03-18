@@ -1,4 +1,3 @@
-const MAX_LEVEL = 5;
 
 var linkedListHead = {
     value: "ROOT",
@@ -6,99 +5,31 @@ var linkedListHead = {
     next: []
 };
 
-var currentHighestLevel = 1;
 
-console.log("hello");
-
-insert(linkedListHead, 10, 10);
-insert(linkedListHead, 30, 30);
-insert(linkedListHead, 20, 20);
-insert(linkedListHead, 60, 60);
-insert(linkedListHead, 40, 40);
-insert(linkedListHead, 50, 50);
-// insertIntoLinked(linkedListHead,  { order:2, value:2, next:[]}, 0);
-// insertIntoLinked(linkedListHead,  { order:1, value:1, next:[]}, 0);
-// insertIntoLinked(linkedListHead,  { order:10, value:10, next:[]}, 0);
-
-for (var i = 0; i < currentHighestLevel; i++) {
-    printLinkedList(linkedListHead, i);
-}
-
-var result = find(linkedListHead,30);
-
-//findInLinkedList(linkedListHead,0,60);
-//find(linkedListHead,10);
-// find(linkedListHead,20);
-// find(linkedListHead,11);
-// find(linkedListHead,51);
 
 function coinFlip() {
     return Math.random() >= 0.5;
 }
 
-//  Node
-
-function getLevels() {
+function getLevels(currentHighestLevel, maxLevel) {
 
     var level = 1;
-    while (level <= currentHighestLevel && coinFlip() && level <= MAX_LEVEL) {
+    while (level <= currentHighestLevel && coinFlip() && level <= maxLevel) {
         level++;
-    }
-
-    if (level > currentHighestLevel) {
-        currentHighestLevel = level;
-        console.log("current highest ", currentHighestLevel);
     }
 
     return level;
 }
 
-function printLinkedList(head, level) {
-    console.info("---level ", level);
-    var current = head;
-    while (current) {
-        console.log("Node:", current.order, current.value);
-        current = current.next[level];
-    }
-
-    console.info("--end of level ", level);
-}
-
-var totalFlights = 0;
-
-function passSkyscrapper(head, height){
-
-    var result = find(head,height);
-    if(result.node){
-        totalFlights += result.node.value;
-        result.node.value += 1;
-
-        // remove everything after that node.
-        removeAfter(result.node, result.path);
-
-    } else {
-        
-    }
-}
-
-function removeAfter(node, path) {
-
-      for (var level = currentHighestLevel-1; level >=0 ; level--){
-            if(path[level]){
-                path[level].next[level] = null;
-            }
-            
-      }
-}
 
 function find(head, order) {
   console.info("--searching ",  order);
     var currentNode = head;
     var path = [];
-    for (var level = currentHighestLevel-1; level >=0 ; level--) {
+    for (var level = head.currentHighestLevel-1; level >=0 ; level--) {
         var result = findInLinkedList(currentNode, level, order)
         if(result.match == "exact"){
-            console.log("found!",result);
+            console.log("found on level !",level,result.node.order);
             return {
                 path:path,
                 node:result.node
@@ -126,7 +57,7 @@ function findInLinkedList(head, level, order) {
     var current = head;
     while (current.next[level]) {
         var nextNode = current.next[level];
-        console.warn("visiting node:", current.order);
+        console.warn("visiting node:", current.order, " on level:",level);
         if (nextNode && nextNode.order == order) {
             return {
                 match: "exact",
@@ -152,6 +83,19 @@ function findInLinkedList(head, level, order) {
 
 }
 
+
+function printLinkedList(head, level) {
+    console.info("---level ", level);
+    var current = head;
+    while (current) {
+        console.log("Node:", current.order, current.value);
+        current = current.next[level];
+    }
+
+    console.info("--end of level ", level);
+}
+
+
 function insertIntoLinked(head, newNode, level) {
 
     console.info("inserting", JSON.stringify(newNode), "into level:", level);
@@ -173,9 +117,22 @@ function insertIntoLinked(head, newNode, level) {
 }
 
 
-function insert(head, order, value) {
+function insert(head, order, value, newNodeLevels) {
 
-    var newNodeLevels = getLevels();
+    if(!newNodeLevels){
+        newNodeLevels = getLevels(head.currentHighestLevel,head.maxLevel);
+
+
+    }else if(newNodeLevels > head.maxLevel){
+        throw new Error("too many levels. maximum possible level:",head.maxLevel);
+    }
+
+    if (newNodeLevels > head.currentHighestLevel) {
+        head.currentHighestLevel = newNodeLevels;
+        console.warn("current highest level:",head.currentHighestLevel);
+    }
+
+
     console.log("inserting..", order, " it will have levels:", newNodeLevels);
     var newNode = {
         order: order,
@@ -186,7 +143,25 @@ function insert(head, order, value) {
     for (var level = 0; level < newNodeLevels; level++) {
         insertIntoLinked(head, newNode, level);
     }
+    return newNode;
 }
 
+const MAX_LEVEL = 5;
 
+function createHead(maxLevel) {
+    return linkedListHead = {
+        value: "ROOT",
+        order: 1000000,
+        next: [],
+        maxLevel : maxLevel || MAX_LEVEL,
+        currentHighestLevel : 1
+    };
 
+}
+
+module.exports = {
+    createHead,
+    printLinkedList,
+    insert,
+    find
+};
